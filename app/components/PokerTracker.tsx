@@ -140,8 +140,10 @@ export default function PokerTracker() {
     </div>
   );
 
-  const MoneyCard = ({label, sublabel, value, onChange, readOnly, color, animDelay="0s", glowActive}: {
-    label: string; sublabel?: string; value: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  const MoneyCard = ({label, sublabel, value, onChange, onBlur, readOnly, color, animDelay="0s", glowActive}: {
+    label: string; sublabel?: string; value: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
     readOnly: boolean; color?: string; animDelay?: string; glowActive?: boolean;
   }) => (
     <div className={glowActive?"ani-glow":""} style={{ background:C.card, border:`1px solid ${color||C.border}`,
@@ -158,7 +160,7 @@ export default function PokerTracker() {
       ) : (
         <div style={{ position:"relative" }}>
           <input
-            type="number" placeholder="0.00" value={value} onChange={onChange}
+            type="number" placeholder="0.00" value={value} onChange={onChange} onBlur={onBlur}
             style={{ width:"100%", boxSizing:"border-box", background:"transparent", border:"none",
               borderBottom:`2px solid ${color||C.border}`, outline:"none", fontSize:32, fontWeight:700,
               color:color||C.text, fontFamily:"'Courier New',monospace", padding:"4px 0 8px",
@@ -318,15 +320,20 @@ export default function PokerTracker() {
   }
 
   // ─── SESSION DETAIL ───
+  const [cashoutLocal, setCashoutLocal] = useState("");
+  useEffect(() => {
+    if (editing) setCashoutLocal(editing.cashout);
+  }, [editing?.id]);
+
   if (view==="session" && editing) {
     const s = editing;
-    const p = calcProfit(s);
+    const p = calcProfit({...s, cashout: cashoutLocal});
     const inv = calcInvested(s);
-    const hasProfit = s.cashout !== "" || !s.open;
+    const hasProfit = cashoutLocal !== "" || !s.open;
 
-    const updateField = (field: keyof Session, val: string) => {
-      const upd = sessions.map(ss=>ss.id===s.id?{...ss,[field]:val}:ss);
-      sync(upd); setEditing({...s,[field]:val});
+    const saveCashout = (val: string) => {
+      const upd = sessions.map(ss=>ss.id===s.id?{...ss,cashout:val}:ss);
+      sync(upd); setEditing({...s,cashout:val});
     };
     const addRebuy = () => {
       const amt = parseFloat(rebuyAmt);
@@ -382,13 +389,14 @@ export default function PokerTracker() {
           <div style={{ display:"flex", alignItems:"center", gap:0, padding:"0 20px" }}>
             <div style={{ flex:1, height:1, background:C.border }} />
             <div style={{ width:8, height:8, borderRadius:"50%", background:C.muted, margin:"0 8px" }} />
-            <div style={{ flex:1, height:1, background:`linear-gradient(to left, ${s.cashout?C.green+"44":C.border}, transparent)` }} />
+            <div style={{ flex:1, height:1, background:`linear-gradient(to left, ${cashoutLocal?C.green+"44":C.border}, transparent)` }} />
           </div>
           <div className="ani-fadeup" style={{ animationDelay:"0.16s" }}>
             {s.open ? (
               <MoneyCard label="Salida" sublabel="Dinero con el que sales"
-                value={s.cashout} onChange={e=>updateField("cashout",e.target.value)}
-                color={s.cashout ? C.green : C.border} readOnly={false} glowActive={!!s.cashout} />
+                value={cashoutLocal} onChange={e=>setCashoutLocal(e.target.value)}
+                onBlur={e=>saveCashout(e.target.value)}
+                color={cashoutLocal ? C.green : C.border} readOnly={false} glowActive={!!cashoutLocal} />
             ) : (
               <MoneyCard label="Salida" sublabel="Dinero con el que saliste"
                 value={fmt(parseFloat(s.cashout)||0)} readOnly={true} color={p>=0?C.green:C.red} />
