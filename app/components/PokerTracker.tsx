@@ -415,14 +415,12 @@ export default function PokerTracker() {
           {!s.open && s.notes && (
             <div style={{ color:C.muted, fontSize:12, padding:"10px 0" }}>📝 {s.notes}</div>
           )}
-          {!s.open && (
-            <button onClick={()=>{ if(confirm("¿Borrar esta sesión?")){ sync(sessions.filter(ss=>ss.id!==s.id)); setEditing(null); setView("history"); }}}
-              style={{ display:"block", width:"100%", padding:"14px", background:"transparent",
-                border:`1px solid ${C.red}44`, color:C.red, fontFamily:"'Courier New',monospace",
-                fontSize:12, fontWeight:700, letterSpacing:2, cursor:"pointer", textTransform:"uppercase" }}>
-              Borrar sesión
-            </button>
-          )}
+          <button onClick={()=>{ if(confirm("¿Borrar esta sesión?")){ sync(sessions.filter(ss=>ss.id!==s.id)); setEditing(null); setView(s.open?"home":"history"); }}}
+            style={{ display:"block", width:"100%", padding:"14px", background:"transparent",
+              border:`1px solid ${C.red}44`, color:C.red, fontFamily:"'Courier New',monospace",
+              fontSize:12, fontWeight:700, letterSpacing:2, cursor:"pointer", textTransform:"uppercase" }}>
+            Borrar sesión
+          </button>
         </div>
       </div>
     );
@@ -446,24 +444,29 @@ export default function PokerTracker() {
           : closed.map((s,i)=>{
             const p=calcProfit(s);
             return (
-              <div key={s.id} className="ani-fadeup" onClick={()=>{ setEditing(s); setView("session"); }}
+              <div key={s.id} className="ani-fadeup"
                 style={{ background:C.card, borderLeft:`3px solid ${p>0?C.green:p<0?C.red:C.border}`,
-                  padding:"14px 16px", marginBottom:8, cursor:"pointer", animationDelay:`${i*0.04}s`,
-                  transition:"background 0.15s" }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                  <div>
-                    <div style={{ fontSize:13, fontWeight:700 }}>{s.venue||"Sin nombre"}</div>
-                    <div style={{ fontSize:11, color:C.muted, marginTop:4 }}>
-                      {s.date}
-                      {stakesLabel(s)&&<span style={{color:C.gold}}> · {stakesLabel(s)}</span>}
-                      {s.players&&` · ${s.players} jug.`}
-                      {s.rebuys.length>0&&` · ${s.rebuys.length} rc.`}
-                    </div>
-                  </div>
-                  <div style={{ fontSize:18, fontWeight:700, color:p>0?C.green:p<0?C.red:C.muted }}>
-                    {p>=0?"+":""}{p.toFixed(2)}€
+                  padding:"14px 16px", marginBottom:8, animationDelay:`${i*0.04}s`,
+                  display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{ flex:1, cursor:"pointer" }} onClick={()=>{ setEditing(s); setView("session"); }}>
+                  <div style={{ fontSize:13, fontWeight:700 }}>{s.venue||"Sin nombre"}</div>
+                  <div style={{ fontSize:11, color:C.muted, marginTop:4 }}>
+                    {s.date}
+                    {stakesLabel(s)&&<span style={{color:C.gold}}> · {stakesLabel(s)}</span>}
+                    {s.players&&` · ${s.players} jug.`}
+                    {s.rebuys.length>0&&` · ${s.rebuys.length} rc.`}
                   </div>
                 </div>
+                <div style={{ fontSize:18, fontWeight:700, color:p>0?C.green:p<0?C.red:C.muted, minWidth:70, textAlign:"right", cursor:"pointer" }}
+                  onClick={()=>{ setEditing(s); setView("session"); }}>
+                  {p>=0?"+":""}{p.toFixed(2)}€
+                </div>
+                <button onClick={e=>{ e.stopPropagation(); if(confirm("¿Borrar esta sesión?")){ sync(sessions.filter(ss=>ss.id!==s.id)); }}}
+                  style={{ background:"none", border:`1px solid ${C.red}44`, color:C.red,
+                    fontFamily:"'Courier New',monospace", fontSize:16, cursor:"pointer",
+                    padding:"6px 10px", borderRadius:2, flexShrink:0 }}>
+                  🗑
+                </button>
               </div>
             );
           })}
