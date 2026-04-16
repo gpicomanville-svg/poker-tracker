@@ -73,6 +73,7 @@ export default function PokerTracker() {
   const [rebuyAmt, setRebuyAmt] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [, setRebuyFlash] = useState(false);
+  const [cashoutLocal, setCashoutLocal] = useState("");
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -88,6 +89,10 @@ export default function PokerTracker() {
     } catch {}
     setLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (editing) setCashoutLocal(editing.cashout);
+  }, [editing?.id]);
 
   const sync = (data: Session[]) => {
     setSessions(data);
@@ -320,10 +325,6 @@ export default function PokerTracker() {
   }
 
   // ─── SESSION DETAIL ───
-  const [cashoutLocal, setCashoutLocal] = useState("");
-  useEffect(() => {
-    if (editing) setCashoutLocal(editing.cashout);
-  }, [editing?.id]);
 
   if (view==="session" && editing) {
     const s = editing;
